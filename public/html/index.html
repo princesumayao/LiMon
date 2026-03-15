@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+<!--SIDEBAR-->
+<aside class="sidebar">
+
+  <div class="sidebar-head">
+    <div class="logo-row">
+      <img src="Woodmark.svg" alt="LiMon Logo" class="logo-full">
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+
+    <div class="nav-group-label">Monitoring</div>
+
+    <div class="nav-item active" data-page="dashboard">
+      <div class="nav-icon-wrap">
+        <svg viewBox="0 0 24 24">
+          <rect x="3" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/>
+          <rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+      </div>
+      Dashboard
+    </div>
+
+    <div class="nav-item" data-page="noise">
+      <div class="nav-icon-wrap">
+        <svg viewBox="0 0 24 24">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+        </svg>
+      </div>
+      Noise Levels
+    </div>
+
+    <div class="nav-item" data-page="environment">
+      <div class="nav-icon-wrap">
+        <svg viewBox="0 0 24 24">
+          <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+        </svg>
+      </div>
+      Environment
+    </div>
+
+    <div class="nav-item" data-page="occupancy">
+      <div class="nav-icon-wrap">
+        <svg viewBox="0 0 24 24">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </div>
+      Occupancy
+    </div>
+
+    <div class="nav-group-label">Notification</div>
+
+    <div class="nav-item" data-page="alerts">
+      <div class="nav-icon-wrap">
+        <svg viewBox="0 0 24 24">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </div>
+      Notifications
+      <span class="nav-badge">6</span>
+    </div>
+
+  </nav>
+
+  <div class="sidebar-foot">
+    <a href="/login" style="text-decoration: none">
+      <div class="user-row">
+        <div class="user-avatar">LS</div>
+        <div style="flex:1;">
+          <div class="user-name">Library Staff</div>
+          <div class="user-role">Administrator</div>
+        </div>
+        <div class="user-chevron">
+          <svg viewBox="0 0 24 24">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </div>
+      </div>
+    </a>
+  </div>
+
+</aside>
+
+<main class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <button class="menu-btn" id="menu-btn">
+      <i data-lucide="menu" class="menu-icon"></i>
+      <i data-lucide="x" class="close-icon"></i>
+    </button>
+    <div class="topbar-center">
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div class="topbar-sub" id="live-time">—</div>
+    </div>
+    <div class="topbar-actions">
+      <div class="status-chip">
+        <div class="status-dot"></div>
+        Online
+      </div>
+    </div>
+  </div>
+
+  <!--DASHBOARD-->
+  <div class="page active" id="page-dashboard">
+
+    <div class="stat-row">
+
+      <div class="stat-card">
+        <div class="sc-top">
+          <div class="sc-icon">
+            <svg viewBox="0 0 24 24">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+            </svg>
+          </div>
+          <span class="sc-badge b-warn">Moderate</span>
+        </div>
+        <div class="sc-label">Noise Level</div>
+        <div class="sc-value">54</div>
+        <div class="sc-unit">decibels · dB</div>
+        <div class="sc-spark">
+          <canvas id="spark-noise"></canvas>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="sc-top">
+          <div class="sc-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+            </svg>
+          </div>
+          <span class="sc-badge b-danger">Above Limit</span>
+        </div>
+        <div class="sc-label">Temperature</div>
+        <div class="sc-value">28.4</div>
+        <div class="sc-unit">degrees Celsius · °C</div>
+        <div class="sc-spark">
+          <canvas id="spark-temp"></canvas>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="sc-top">
+          <div class="sc-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+            </svg>
+          </div>
+          <span class="sc-badge b-ok">Normal</span>
+        </div>
+        <div class="sc-label">Humidity</div>
+        <div class="sc-value">62</div>
+        <div class="sc-unit">relative humidity · %</div>
+        <div class="sc-spark">
+          <canvas id="spark-humid"></canvas>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="sc-top">
+          <div class="sc-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+          <span class="sc-badge b-ok">Available</span>
+        </div>
+        <div class="sc-label">Occupancy</div>
+        <div class="sc-value">37</div>
+        <div class="sc-unit">of 60 max capacity</div>
+        <div class="sc-spark">
+          <canvas id="spark-occ"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!--CHART ROW-->
+    <div class="grid-3-1">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Noise &amp; Temperature Monitoring</div>
+<!--            <div class="card-sub">Today · sadsadsa</div>-->
+          </div>
+          <div class="seg-control">
+            <button class="seg-btn active trend-tab" data-set="today">Today</button>
+            <button class="seg-btn trend-tab" data-set="week">Week</button>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="trendChart"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Occupancy</div>
+            <div class="card-sub">UHF RFID</div>
+          </div>
+        </div>
+        <div class="occ-body">
+          <div class="gauge-outer">
+            <canvas id="gaugeChartDash"></canvas>
+            <div class="gauge-label">
+              <div class="gauge-val">37</div>
+              <div class="gauge-cap">/ 60 max</div>
+            </div>
+          </div>
+          <div class="cap-bar-wrap">
+            <div class="cap-bar-head"><span>Capacity Used</span><strong>62%</strong></div>
+            <div class="cap-track">
+              <div class="cap-fill"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--NOTIF PREV-->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Recent Alerts</div>
+          <div class="card-sub">Latest threshold notifications</div>
+        </div>
+        <span class="card-action" onclick="navigate('alerts')">View All</span>
+      </div>
+      <div class="alert-list">
+        <div class="alert-row">
+          <div class="alert-dot" style="background:var(--red)"></div>
+          <div class="alert-text">
+            <div class="alert-msg">Temperature above limit: 28°C</div>
+            <div class="alert-meta">Today, 2:14 PM · Area A Sensor</div>
+          </div>
+          <span class="alert-tag">TEMP</span>
+        </div>
+
+        <div class="alert-row">
+          <div class="alert-dot" style="background:var(--amber)"></div>
+          <div class="alert-text">
+            <div class="alert-msg">Moderate Noise: 54 dB</div>
+            <div class="alert-meta">Today, 1:47 PM · Area B Sensor</div>
+          </div>
+          <span class="alert-tag">NOISE</span>
+        </div>
+
+        <div class="alert-row">
+          <div class="alert-dot" style="background:var(--navy-3)"></div>
+          <div class="alert-text">
+            <div class="alert-msg">Occupancy at 60% capacity</div>
+            <div class="alert-meta">Today, 1:05 PM · Entrance</div>
+          </div>
+          <span class="alert-tag">OCC</span>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!--NOISE PAGE-->
+  <div class="page" id="page-noise">
+    <div class="section-head">
+      <div>
+        <div class="section-title">Noise Analytics</div>
+        <!--                <div class="section-sub">Real-time decibel readings per sensor area</div>-->
+        <div class="section-sub">Real-time monitoring with historical analytics</div>
+      </div>
+    </div>
+
+    <div class="stat-row" style="grid-template-columns:repeat(3,1fr);">
+      <div class="stat-card">
+        <div class="sc-top">
+          <div class="sc-icon">
+            <svg viewBox="0 0 24 24">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+            </svg>
+          </div>
+          <span class="sc-badge b-warn">
+
+          </span></div>
+        <div class="sc-label">Area A</div>
+        <div class="sc-value">54</div>
+        <div class="sc-unit">decibels · dB</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-top">
+          <div class="sc-icon">
+            <svg viewBox="0 0 24 24">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+            </svg>
+          </div>
+          <span class="sc-badge b-ok">Normal</span></div>
+        <div class="sc-label">Area B</div>
+        <div class="sc-value">38</div>
+        <div class="sc-unit">decibels · dB</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-top">
+          <div class="sc-icon">
+            <svg viewBox="0 0 24 24">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+            </svg>
+          </div>
+          <span class="sc-badge b-ok">Normal</span></div>
+        <div class="sc-label">Area C</div>
+        <div class="sc-value">42</div>
+        <div class="sc-unit">decibels · dB</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Noise Level by Area</div>
+      </div>
+      <div style="padding: 8px 0;">
+        <div class="noise-level-bar">
+          <div class="nlb-label">Area A</div>
+          <div class="nlb-track">
+            <div class="nlb-fill"
+                 style="width:54%;background:linear-gradient(90deg,var(--amber),#ffcc00);"></div>
+          </div>
+          <div class="nlb-val" style="color:var(--amber)">54 dB</div>
+        </div>
+        <div class="noise-level-bar">
+          <div class="nlb-label">Area B</div>
+          <div class="nlb-track">
+            <div class="nlb-fill"
+                 style="width:38%;background:linear-gradient(90deg,var(--green),#4ade80);"></div>
+          </div>
+          <div class="nlb-val" style="color:var(--green)">38 dB</div>
+        </div>
+        <div class="noise-level-bar">
+          <div class="nlb-label">Area C</div>
+          <div class="nlb-track">
+            <div class="nlb-fill"
+                 style="width:42%;background:linear-gradient(90deg,var(--green),#4ade80);"></div>
+          </div>
+          <div class="nlb-val" style="color:var(--green)">42 dB</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Noise Monitoring</div>
+          <div class="card-sub">Today · All noise sensors</div>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="noiseChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!--ENV PAGE-->
+  <div class="page" id="page-environment">
+    <div class="section-head">
+      <div>
+        <div class="section-title">Environment Analytics</div>
+        <div class="section-sub">Real-time monitoring with historical analytics</div>
+      </div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-card sc-temp">
+        <div class="sc-top">
+          <div class="sc-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+            </svg>
+          </div>
+          <span class="sc-badge b-danger">Above Limit</span></div>
+        <div class="sc-label">Temp · Area A</div>
+        <div class="sc-value">28.4</div>
+        <div class="sc-unit">°C</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-top">
+          <div class="sc-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+            </svg>
+          </div>
+          <span class="sc-badge b-ok">Normal</span></div>
+        <div class="sc-label">Temp · Area B</div>
+        <div class="sc-value">26.1</div>
+        <div class="sc-unit">°C</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-top">
+          <div class="sc-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+            </svg>
+          </div>
+          <span class="sc-badge b-ok">Normal</span></div>
+        <div class="sc-label">Humidity · Area A</div>
+        <div class="sc-value">62</div>
+        <div class="sc-unit">%</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-top">
+          <div class="sc-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+            </svg>
+          </div>
+          <span class="sc-badge b-ok">Normal</span></div>
+        <div class="sc-label">Humidity · Area B</div>
+        <div class="sc-value">58</div>
+        <div class="sc-unit">%</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Temperature Monitoring</div>
+          <div class="card-sub">Today</div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="tempChart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Humidity Monitoring</div>
+          <div class="card-sub">Today</div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="humidChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!--OCCUPANCY PAGE-->
+  <div class="page" id="page-occupancy">
+    <div class="section-head">
+      <div>
+        <div class="section-title">Occupancy Analytics</div>
+        <div class="section-sub">Real-time monitoring with historical analytics</div>
+      </div>
+    </div>
+    <div class="grid-3-1">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Occupancy Over Time</div>
+          <div class="card-sub">Today</div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="occChart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Current Status</div>
+            <div class="card-sub">Live via RFID</div>
+          </div>
+        </div>
+        <div class="occ-body">
+          <div class="gauge-outer">
+            <canvas id="gaugeChartOcc"></canvas>
+            <div class="gauge-label">
+              <div class="gauge-val">37</div>
+              <div class="gauge-cap">/ 60 max</div>
+            </div>
+          </div>
+          <div class="cap-bar-wrap">
+            <div class="cap-bar-head"><span>Capacity Used</span><strong>62%</strong></div>
+            <div class="cap-track">
+              <div class="cap-fill"></div>
+            </div>
+          </div>
+          <div style="width:100%;display:flex;flex-direction:column;gap:6px;">
+            <div style="display:flex;justify-content:space-between;font-size:12px;padding:0 2px;">
+              <span style="color:var(--label-3)">Entered today</span><strong>49</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;padding:0 2px;">
+              <span style="color:var(--label-3)">Exited today</span><strong>12</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!--NOTIF PAGE-->
+  <div class="page" id="page-alerts">
+    <div class="section-head">
+      <div>
+        <div class="section-title">System Notifications</div>
+        <div class="section-sub">All threshold notifications · Today</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="alert-list">
+
+        <div class="alert-row">
+          <div class="alert-dot" style="background:var(--red)"></div>
+          <div class="alert-text">
+            <div class="alert-msg">Temperature above limit: 28°C</div>
+            <div class="alert-meta">Today, 2:14 PM · Area A Sensor</div>
+          </div>
+          <span class="alert-tag">TEMP</span></div>
+
+        <div class="alert-row">
+          <div class="alert-dot" style="background:var(--amber)"></div>
+          <div class="alert-text">
+            <div class="alert-msg">Moderate Noise: 54 dB</div>
+            <div class="alert-meta">Today, 1:47 PM · Area B Sensor</div>
+          </div>
+          <span class="alert-tag">NOISE</span></div>
+
+        <div class="alert-row">
+          <div class="alert-dot" style="background:var(--navy-3)"></div>
+          <div class="alert-text">
+            <div class="alert-msg">Occupancy at 60% capacity</div>
+            <div class="alert-meta">Today, 1:05 PM · Entrance RFID</div>
+          </div>
+          <span class="alert-tag">OCC</span></div>
+
+        <div class="alert-row">
+          <div class="alert-dot" style="background:var(--red)"></div>
+          <div class="alert-text">
+            <div class="alert-msg">Noise level above limit: 63 dB</div>
+            <div class="alert-meta">Today, 11:22 AM · Area A Sensor</div>
+          </div>
+          <span class="alert-tag">NOISE</span></div>
+
+        <div class="alert-row">
+          <div class="alert-dot" style="background:var(--green)"></div>
+          <div class="alert-text">
+            <div class="alert-msg">Humidity returned to normal</div>
+            <div class="alert-meta">Today, 9:30 AM · Area C Sensor</div>
+          </div>
+          <span class="alert-tag">HUMID</span></div>
+
+        <div class="alert-row">
+          <div class="alert-dot" style="background:var(--amber)"></div>
+          <div class="alert-text">
+            <div class="alert-msg">Noise reached moderate level: 51 dB</div>
+            <div class="alert-meta">Today, 8:45 AM · Area B Sensor</div>
+          </div>
+          <span class="alert-tag">NOISE</span></div>
+      </div>
+    </div>
+  </div>
+
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="./javascript/index.js"></script>
+</body>
+</html>
