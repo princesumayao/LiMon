@@ -5,7 +5,10 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "install:all": "npm install && npm --prefix backend install",
+    "all": "concurrently -n api,web,tables -c blue,green,magenta \"npm --prefix backend start\" \"npm start\" \"npm --prefix backend run simulate:tables\"",
+    "demo": "concurrently -n api,web,occupancy,tables -c blue,green,yellow,magenta \"npm --prefix backend start\" \"npm start\" \"npm --prefix backend run simulate:occupancy\" \"npm --prefix backend run simulate:tables\""
   },
   "keywords": [],
   "author": "",
@@ -13,5 +16,8 @@
   "type": "commonjs",
   "dependencies": {
     "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
   }
 }

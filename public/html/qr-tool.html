@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seat Map QR Generator — Lemon</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    /* Fully self-contained page - this is a one-off staff utility, not
+       part of the dashboard, so it doesn't pull in style.css at all. */
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        font-family: -apple-system, 'Inter', Segoe UI, Roboto, sans-serif;
+        background: #f4f5f7;
+        color: #1c1c1e;
+        display: flex;
+        justify-content: center;
+        padding: 32px 16px 60px;
+    }
+    .wrap { width: 100%; max-width: 460px; }
+    h1 { font-size: 19px; margin: 0 0 4px; }
+    .sub { font-size: 13px; color: #6e6e73; margin-bottom: 22px; line-height: 1.5; }
+    .card { background: #fff; border-radius: 14px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 16px; }
+    label { display: block; font-size: 12.5px; font-weight: 600; color: #48484a; margin-bottom: 6px; }
+    select {
+        width: 100%; padding: 9px 10px; border-radius: 8px; border: 1px solid #d1d1d6;
+        font-size: 13px; font-family: inherit; background: #fff;
+    }
+    .qr-box { display: flex; justify-content: center; padding: 20px 0 8px; }
+    .qr-url { text-align: center; font-size: 12.5px; font-weight: 600; color: #1c1c1e; word-break: break-all; margin-top: 4px; }
+    .actions { display: flex; gap: 10px; margin-top: 16px; }
+    button {
+        flex: 1; padding: 10px; border-radius: 8px; border: none; font-family: inherit;
+        font-size: 13px; font-weight: 600; cursor: pointer;
+    }
+    .btn-primary { background: #0d2148; color: #fff; }
+    .btn-secondary { background: #f0f0f2; color: #1c1c1e; }
+    .note {
+        font-size: 12px; line-height: 1.6; color: #6e6e73; background: #fff8e8;
+        border: 1px solid #ffe4a8; border-radius: 10px; padding: 12px 14px;
+    }
+    .note strong { color: #1c1c1e; }
+    .note-error { background: #fff0f0; border-color: #ffc9c9; }
+    .loading { text-align: center; font-size: 13px; color: #6e6e73; padding: 20px 0; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Seat Map QR Generator</h1>
+    <div class="sub">For printing or posting outside the library / on social media - this is a staff tool, it's not shown anywhere on the dashboard itself.</div>
+
+    <div class="card" id="app">
+      <div class="loading" id="loading-msg">Detecting this computer's network…</div>
+    </div>
+
+    <div class="note" id="freshness-note">
+      <strong>Important if you're printing this:</strong> the QR code points at this computer's current network address. If the Wi-Fi/network changes later (different router, IP reassigned after a reboot, moved to a different room), a printed copy will stop working and you'll need to come back here and print a new one. For something posted long-term, ask IT/network admin to reserve a fixed IP for this PC (a "DHCP reservation") so the address never changes.
+    </div>
+  </div>
+
+<script>
+const app = document.getElementById('app');
+let currentUrl = '';
+
+async function init() {
+    let lanIps = [];
+    try {
+        const res = await fetch('/api/server-info');
+        const data = await res.json();
+        lanIps = data.lanIps || [];
+    } catch (err) {
+        console.error(err);
+    }
+
+    if (!lanIps.length) {
+        app.innerHTML = '<div class="note note-error">Could not detect a network address for this computer. Make sure it\'s connected to Wi-Fi/Ethernet, then reload this page.</div>';
+        return;
+    }
+
+    const port = window.location.port || '3000';
+    const urlFor = ip => `${window.location.protocol}//${ip}:${port}/seats`;
+
+    app.innerHTML = `
+        <label for="ip-select">Network address</label>
+        <select id="ip-select">
+            ${lanIps.map(c => `<option value="${c.address}">${c.address} (${c.name})</option>`).join('')}
+        </select>
+        <div class="qr-box" id="qr-box"></div>
+        <div class="qr-url" id="qr-url"></div>
+        <div class="actions">
+            <button class="btn-secondary" id="copy-btn">Copy Link</button>
+            <button class="btn-primary" id="download-btn">Download PNG</button>
+        </div>
+    `;
+
+    const select = document.getElementById('ip-select');
+    const render = () => {
+        currentUrl = urlFor(select.value);
+        document.getElementById('qr-url').textContent = currentUrl;
+        const box = document.getElementById('qr-box');
+        box.innerHTML = '';
+        new QRCode(box, { text: currentUrl, width: 220, height: 220 });
+    };
+    select.addEventListener('change', render);
+    render();
+
+    document.getElementById('copy-btn').addEventListener('click', () => {
+        navigator.clipboard.writeText(currentUrl);
+        const btn = document.getElementById('copy-btn');
+        const original = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = original; }, 1400);
+    });
+
+    document.getElementById('download-btn').addEventListener('click', () => {
+        const canvas = document.querySelector('#qr-box canvas');
+        if (!canvas) return;
+        const link = document.createElement('a');
+        link.download = 'lemon-seat-map-qr.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    });
+}
+
+init();
+</script>
+</body>
+</html>

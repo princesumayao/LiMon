@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seat Availability — Lemon</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="./css/style.css?v=10">
+  <script>
+    // Same reasoning as index.html: works whether this page was opened as
+    // http://localhost:3000/seats (on the host PC) or, more to the point
+    // for this page, http://192.168.1.23:3000/seats (a student's phone
+    // that scanned the QR code, on the same Wi-Fi).
+    document.write('<script src="' + window.location.protocol + '//' + window.location.hostname + ':4000/socket.io/socket.io.js"><\/script>');
+  </script>
+  <style>
+    /* This page intentionally doesn't pull in the full dashboard shell
+       (sidebar, topbar, nav) - it's a single public-facing card, so it
+       gets its own small, mobile-first layout instead. */
+    body {
+        background: var(--bg);
+        display: flex;
+        justify-content: center;
+        padding: 20px 14px 40px;
+    }
+
+    .seatpage-wrap {
+        width: 100%;
+        max-width: 640px;
+    }
+
+    .seatpage-header {
+        text-align: center;
+        margin-bottom: 16px;
+    }
+
+    .seatpage-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--label);
+    }
+
+    .seatpage-sub {
+        font-size: 13px;
+        color: var(--label-3);
+        margin-top: 4px;
+    }
+
+    .seatpage-live-dot {
+        display: inline-block;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--green);
+        margin-right: 6px;
+        animation: seatpageLivePulse 1.8s ease-in-out infinite;
+    }
+
+    .seatpage-live-dot.is-offline {
+        background: var(--label-4);
+        animation: none;
+    }
+
+    @keyframes seatpageLivePulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.35; }
+    }
+
+    .seatpage-updated {
+        text-align: center;
+        font-size: 11.5px;
+        color: var(--label-3);
+        margin-top: 14px;
+    }
+
+    /* Larger tap-friendly table boxes and legend text on small screens -
+       the grid itself (.tm-table-grid) already reflows column count on
+       its own via auto-fill/minmax, this just tunes touch sizing. */
+    @media (max-width: 480px) {
+        .table-map-legend {
+            flex-wrap: wrap;
+            gap: 10px 16px;
+        }
+
+        .tm-table-grid {
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="seatpage-wrap">
+    <div class="seatpage-header">
+      <div class="seatpage-title">Seat Availability</div>
+      <div class="seatpage-sub"><span class="seatpage-live-dot" id="seatpage-live-dot"></span><span id="seatpage-status-text">Live</span></div>
+    </div>
+
+    <div class="card table-map-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Table Occupancy Map</div>
+          <div class="card-sub">Updates automatically — no need to refresh</div>
+        </div>
+        <div class="table-map-legend">
+          <span class="tm-legend-item"><span class="tm-dot tm-dot-available"></span>Available</span>
+          <span class="tm-legend-item"><span class="tm-dot tm-dot-occupied"></span>Full</span>
+        </div>
+      </div>
+      <div class="table-map-body" id="table-map-body">
+        <div class="table-map-empty" id="table-map-empty">Loading table layout…</div>
+      </div>
+    </div>
+
+    <div class="seatpage-updated" id="seatpage-updated"></div>
+  </div>
+
+<script src="./javascript/seat-map.js?v=1"></script>
+</body>
+</html>

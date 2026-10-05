@@ -209,6 +209,7 @@ body {
 .sidebar-foot {
     padding: 10px 10px 16px;
     border-top: 1px solid rgba(60, 60, 67, 0.08);
+    position: relative;
 }
 
 .user-row {
@@ -220,6 +221,10 @@ body {
     background: var(--fill-1);
     cursor: pointer;
     transition: background 0.2s;
+    /* Reset - this is now a <button>, not a styled <div> */
+    width: 100%;
+    border: none;
+    font-family: inherit;
 }
 
 .user-row:hover {
@@ -276,6 +281,7 @@ body {
     min-height:100vh;
     margin-left: var(--sidebar-w);
     width: calc(100% - var(--sidebar-w));
+    overflow: hidden;
 
     transition: margin-left 0.34s var(--ease);
 }
@@ -371,37 +377,168 @@ body {
     gap: 8px;
 }
 
-.status-chip {
+/* READ / UNREAD alert rows (Notifications page only) */
+.alert-row-read {
+    opacity: 0.55;
+}
+
+.alert-row-read .alert-msg {
+    font-weight: 400;
+}
+
+/* ---- Desktop Alerts toggle (topbar) ----
+   Built as an actual on/off switch rather than a text button - reads instantly
+   as a setting, not an action. Disabled/grayed-out state covers
+   unsupported browsers, insecure (plain http:// LAN) contexts, and
+   previously-denied permission - see updateNotifToggle() in index.js. */
+.notif-toggle {
     display: flex;
     align-items: center;
-    gap: 6px;
-    background: rgba(52, 199, 89, 0.10);
-    border: 1px solid rgba(52, 199, 89, 0.20);
-    border-radius: 20px;
-    padding: 5px 11px;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.notif-toggle-label {
     font-size: 11.5px;
     font-weight: 500;
-    color: var(--green);
+    color: var(--label-2);
     white-space: nowrap;
 }
 
-.status-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--green);
-    animation: pulse 2.2s ease-in-out infinite;
+.notif-toggle-switch {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
 }
 
-@keyframes pulse {
-    0%, 100% {
-        opacity: 1;
-        transform: scale(1);
+.notif-toggle-switch input {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    cursor: pointer;
+}
+
+.notif-toggle-track {
+    width: 34px;
+    height: 20px;
+    border-radius: 10px;
+    background: var(--fill-2);
+    border: 1px solid var(--border-2);
+    display: block;
+    transition: background var(--transition), border-color var(--transition);
+}
+
+.notif-toggle-thumb {
+    display: block;
+    width: 14px;
+    height: 14px;
+    margin: 2px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    transition: transform 0.22s var(--spring);
+}
+
+.notif-toggle-switch input:checked ~ .notif-toggle-track {
+    background: var(--green);
+    border-color: var(--green);
+}
+
+.notif-toggle-switch input:checked ~ .notif-toggle-track .notif-toggle-thumb {
+    transform: translateX(14px);
+}
+
+.notif-toggle-switch input:disabled {
+    cursor: not-allowed;
+}
+
+.notif-toggle.is-disabled {
+    cursor: not-allowed;
+}
+
+.notif-toggle.is-disabled .notif-toggle-label {
+    color: var(--label-4);
+}
+
+.notif-toggle.is-disabled .notif-toggle-track {
+    opacity: 0.6;
+}
+
+@media (max-width: 720px) {
+    .notif-toggle-label {
+        display: none;
     }
-    50% {
-        opacity: 0.55;
-        transform: scale(0.78);
+}
+
+/* ---- In-page toast notifications ----
+   The real, universal notification method - no browser permission dialog
+   at all, so it works identically on every device regardless of the
+   http:// LAN restriction above. */
+.toast-stack {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: min(340px, calc(100vw - 40px));
+}
+
+.toast {
+    background: var(--bg-2);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-md, 0 8px 24px rgba(0,0,0,0.14));
+    border-left: 3px solid var(--red);
+    padding: 12px 14px;
+    cursor: pointer;
+    animation: toastIn 0.3s var(--spring) both;
+}
+
+.toast.toast-out {
+    animation: toastOut 0.25s var(--ease) both;
+}
+
+.toast-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--label);
+}
+
+.toast-body {
+    margin-top: 3px;
+    font-size: 12.5px;
+    line-height: 1.4;
+    color: var(--label-3);
+}
+
+@keyframes toastIn {
+    from { opacity: 0; transform: translateX(24px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toastOut {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(24px); }
+}
+
+@media (max-width: 480px) {
+    .toast-stack {
+        left: 14px;
+        right: 14px;
+        top: 14px;
+        max-width: none;
     }
+}
+
+.report-area-picker {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
 }
 
 .seg-control {
@@ -443,11 +580,31 @@ body {
     padding: 24px 28px 40px;
     flex-direction: column;
     gap: 20px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 .page.active {
     display: flex;
     animation: pageIn var(--transition) both;
+}
+
+.dashboard-split-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    align-items: stretch;
+}
+
+.action-btn {
+    appearance: none;
+    border: none;
+    background: transparent;
+    padding: 0;
+    font: inherit;
+    display: inline-flex;
+    align-items: center;
 }
 
 @keyframes pageIn {
@@ -494,7 +651,7 @@ body {
 .card-action {
     font-size: 12px;
     font-weight: 500;
-    color: var(--gold-2);
+    color: var(--navy-3);
     cursor: pointer;
     transition: opacity var(--transition);
 }
@@ -580,6 +737,20 @@ body {
 .b-ok {
     color: var(--green);
     font-weight: 600;
+}
+
+.b-muted {
+    color: var(--label-3);
+    font-weight: 600;
+}
+
+.chart-stale-badge {
+    display: none;
+    margin-left: 8px;
+}
+
+.chart-stale-badge.show {
+    display: inline-block;
 }
 
 .sc-label {
@@ -794,6 +965,369 @@ body {
     margin-top: 1px;
 }
 
+/* Fixed-height scroll for the full Notifications page list, so the card
+   stops growing forever as more alerts arrive - pagination handles the rest. */
+.alert-list-scroll {
+    max-height: 480px;
+    overflow-y: auto;
+}
+
+/* PAGINATION */
+.report-stat-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 14px;
+}
+
+.summary-stat-meta {
+    font-size: 12px;
+    color: var(--label-3);
+    margin-top: 8px;
+}
+
+.summary-snapshot-card {
+    height: 100%;
+}
+
+.summary-snapshot-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    padding: 8px 20px 18px;
+}
+
+.summary-snapshot-item {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 8px 2px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.summary-snapshot-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--label-4);
+}
+
+.summary-snapshot-value {
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--label);
+    font-weight: 600;
+}
+
+/* ---- Shared action-link/button system ----
+   One set of classes for every "do a thing" control that isn't a full
+   card (Download CSV/PDF in section-heads, Reports page export row, the
+   Analytics "Run Analysis" button). Previously these were three separate,
+   independently-drifted class pairs (header-action-link, report-action-link
+   + a dead .action-btn.card-action rule); consolidated here so every page
+   uses the exact same look for the exact same kind of action.
+   .btn-text   -> plain inline text link (CSV/PDF/export links)
+   .btn-primary -> solid pill button (primary actions, e.g. Run Analysis) */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.btn-text {
+    display: inline;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--navy-3);
+    text-decoration: none;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: opacity var(--transition);
+}
+
+.btn-text:hover {
+    opacity: 0.7;
+}
+
+.btn-text:disabled {
+    opacity: 0.55;
+    cursor: wait;
+    text-decoration: none;
+}
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    border-radius: var(--r-md);
+    padding: 9px 18px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity var(--transition);
+}
+
+.btn-primary:hover {
+    opacity: 0.88;
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.report-intro {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: 14px;
+    align-items: stretch;
+}
+
+.report-intro-copy {
+    background: var(--bg-2);
+    color: var(--label);
+    border-radius: var(--r-lg);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-2);
+}
+
+.report-kicker {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: var(--navy-3);
+    margin-bottom: 10px;
+}
+
+.report-intro-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    line-height: 1.05;
+    margin-bottom: 10px;
+}
+
+.report-intro-sub {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--label-3);
+    max-width: 52ch;
+}
+
+.report-intro-action {
+    margin-top: 14px;
+}
+
+/* ---- Request a Report (single date + area, on demand) ----
+   Same field/control language as the Analytics page's date range + area
+   picker, and the same btn-text/btn-primary pair used everywhere else -
+   this is a control, not a new card style. */
+.request-report-card {
+    margin-bottom: 16px;
+}
+
+.request-report-body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 16px;
+    padding: 4px 20px 20px;
+}
+
+.request-report-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.request-report-actions {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-left: auto;
+}
+
+.request-report-status {
+    padding: 0 20px 18px;
+    font-size: 12.5px;
+    color: var(--label-3);
+    min-height: 16px;
+}
+
+.report-summary-band {
+    background: var(--bg-2);
+    border-radius: var(--r-lg);
+    border: 1px solid var(--border-2);
+    box-shadow: var(--shadow-sm);
+    padding: 18px 18px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.report-summary-band .summary-plain {
+    padding: 0;
+    font-size: 15px;
+}
+
+.report-summary-band .summary-plain-list {
+    padding: 8px 0 0;
+}
+
+.summary-card .card-header {
+    border-bottom: none;
+    padding-bottom: 8px;
+}
+
+.report-stat-row .stat-card {
+    background: var(--bg-2);
+    border: none;
+    box-shadow: var(--shadow-sm);
+    padding: 18px 18px 16px;
+}
+
+.report-stat-row .stat-card:hover {
+    transform: translateY(-2px);
+}
+
+.report-stat-row .sc-value {
+    font-size: 30px;
+}
+
+.report-stat-row .summary-stat-meta {
+    margin-top: 6px;
+    line-height: 1.45;
+}
+
+.report-page {
+    position: relative;
+}
+
+.report-page::before {
+    content: none;
+}
+
+.report-page > * {
+    position: relative;
+    z-index: 1;
+}
+
+@media (max-width: 1080px) {
+    .dashboard-split-row {
+        grid-template-columns: 1fr;
+    }
+
+    .report-intro {
+        grid-template-columns: 1fr;
+    }
+
+    .summary-snapshot-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 720px) {
+    .request-report-body {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .request-report-actions {
+        margin-left: 0;
+        justify-content: flex-start;
+    }
+
+    .report-intro-title {
+        font-size: 24px;
+    }
+
+    .summary-snapshot-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .report-stat-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.pagination-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 12px 20px;
+    border-top: 1px solid var(--border-2);
+}
+
+.pg-btn {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--navy-3);
+    background: var(--fill-2);
+    border: none;
+    border-radius: var(--r-sm, 8px);
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: opacity var(--transition), background var(--transition);
+}
+
+.pg-btn:hover {
+    opacity: 0.8;
+}
+
+.pg-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.pg-status {
+    font-size: 12px;
+    color: var(--label-3);
+    font-weight: 500;
+}
+
+/* FRIENDLY SUMMARY (plain-language headline for non-technical staff) */
+.summary-plain {
+    padding: 14px 20px 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--label);
+    letter-spacing: -0.1px;
+}
+
+.summary-plain-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 20px 16px;
+}
+
+.summary-plain-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--label-2, var(--label-3));
+}
+
+.summary-plain-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
 .alert-tag {
     font-size: 10.5px;
     font-weight: 600;
@@ -873,4 +1407,527 @@ body {
     display: grid;
     grid-template-columns: minmax(0,1fr) minmax(260px,300px);
     gap:14px;
+}
+
+/* TABLE OCCUPANCY MAP */
+
+.table-map-card {
+    margin-top: 14px;
+}
+
+.table-map-legend {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.tm-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--label-3);
+}
+
+.tm-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.tm-dot-available {
+    background: var(--green);
+}
+
+.tm-dot-occupied {
+    background: var(--red);
+}
+
+.table-map-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.table-map-empty {
+    padding: 30px 0;
+    text-align: center;
+    color: var(--label-3);
+    font-size: 13px;
+}
+
+.tm-area-block {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.tm-area-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.tm-area-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--label);
+    letter-spacing: -0.1px;
+}
+
+.tm-area-count {
+    font-size: 11px;
+    color: var(--label-3);
+}
+
+.tm-table-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 14px;
+}
+
+.tm-table-unit {
+    display: flex;
+}
+
+.tm-table-box {
+    width: 100%;
+    background: var(--bg-2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 12px 14px 11px;
+    box-shadow: var(--shadow-xs);
+    transition: box-shadow var(--transition);
+}
+
+.tm-table-box-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 9px;
+}
+
+.tm-table-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--label);
+    letter-spacing: -0.1px;
+}
+
+.tm-table-count {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.tm-count-empty {
+    color: var(--green);
+}
+
+.tm-count-full {
+    color: var(--red);
+}
+
+.tm-cap-track {
+    height: 6px;
+    background: var(--bg);
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+
+.tm-cap-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width var(--transition), background var(--transition);
+}
+
+/* Flash pulse played briefly on a table's box whenever its seat
+   count changes live, so a change is noticeable even if you're not
+   staring at that exact table when it happens. */
+@keyframes tmFlash {
+    0%   { box-shadow: 0 0 0 0 rgba(184, 130, 10, 0.5); }
+    30%  { box-shadow: 0 0 0 6px rgba(184, 130, 10, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(184, 130, 10, 0); }
+}
+
+.tm-seat-flash {
+    animation: tmFlash 0.7s var(--ease);
+}
+
+/* SETTINGS CARD */
+
+.settings-card {
+    margin-top: 14px;
+}
+
+.settings-card .card-header {
+    align-items: flex-start;
+    /* This card's body is one short control line, not a list/table below
+       it - a full-width divider here just reads as a stray line rather
+       than separating meaningfully different content, unlike cards with
+       a header sitting above a longer list or table. */
+    border-bottom: none;
+    padding-bottom: 6px;
+}
+
+.settings-card .card-sub {
+    max-width: 520px;
+    line-height: 1.5;
+}
+
+.settings-card-body {
+    padding: 8px 20px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.settings-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--label);
+}
+
+.settings-select {
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--label);
+    background: var(--bg-2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: border-color var(--transition);
+}
+
+.settings-select:hover,
+.settings-select:focus {
+    border-color: var(--navy-3);
+    outline: none;
+}
+
+.settings-save-status {
+    font-size: 12px;
+    color: var(--label-3);
+    transition: color var(--transition), opacity var(--transition);
+}
+
+.settings-save-status.saved {
+    color: var(--green);
+}
+
+.settings-save-status.error {
+    color: var(--red);
+}
+
+/* USER MENU POPOVER */
+
+.user-menu-popover {
+    display: none;
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: calc(100% + 6px);
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    box-shadow: 0 8px 24px rgba(13, 33, 72, 0.14), 0 2px 6px rgba(0,0,0,0.06);
+    padding: 6px;
+    z-index: 50;
+}
+
+.user-menu-popover.open {
+    display: block;
+}
+
+.user-menu-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 9px 10px;
+}
+
+.user-menu-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--label);
+}
+
+.user-menu-role {
+    font-size: 10.5px;
+    color: var(--label-3);
+}
+
+.user-menu-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 2px 4px 6px;
+}
+
+.user-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 9px 10px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--label);
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s;
+}
+
+.user-menu-item:hover {
+    background: var(--fill-2);
+}
+
+.user-menu-item-danger {
+    color: var(--red);
+}
+
+.user-menu-item-danger:hover {
+    background: rgba(255, 59, 48, 0.08);
+}
+/* ---- ANALYTICS PAGE (correlation analytics) ---- */
+.analytics-controls-card {
+    padding: 18px 20px;
+    margin-bottom: 16px;
+}
+
+.analytics-controls {
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.analytics-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.analytics-field label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: var(--label-3);
+}
+
+.analytics-meta {
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--label-3);
+}
+
+.analytics-section-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: var(--label-3);
+    margin: 4px 2px 10px;
+}
+
+/* ---- Analytics results: browser-style tabs over one panel ----
+   One tab per variable pair, reusing the same seg-control/seg-btn pill
+   pattern as the dashboard's Today/Week toggle so it matches the rest of
+   the system instead of introducing a new control style. Only the
+   selected pair's content renders, in a single panel - this also solves
+   the earlier "boxes stretching to match a taller neighbor" problem,
+   since there's only ever one panel on screen at a time. */
+.corr-tabs-card {
+    padding: 14px 18px 18px;
+}
+
+.corr-tabbar {
+    overflow-x: auto;
+    max-width: 100%;
+    margin-bottom: 14px;
+    scrollbar-width: none;
+}
+
+/* Before any analysis has run (or while one is loading), this bar has no
+   tab buttons in it yet - without this it still rendered as an empty
+   gray pill (the seg-control background/padding) sitting above the idle
+   message, which looked like a broken control. */
+.corr-tabbar:empty {
+    display: none;
+}
+
+.corr-tabbar::-webkit-scrollbar {
+    display: none;
+}
+
+.corr-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.corr-tab-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.corr-tab-dot-neutral { background: var(--label-4); }
+.corr-tab-dot-mild { background: var(--amber); }
+.corr-tab-dot-strong { background: var(--navy); }
+
+.corr-idle {
+    padding: 28px 20px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--label-3);
+}
+
+.corr-idle strong {
+    color: var(--label);
+}
+
+.corr-panel {
+    padding: 2px 2px 4px;
+    animation: analyticsMetaFade 0.28s var(--ease) both;
+}
+
+.corr-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.corr-pair-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--label);
+}
+
+.corr-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.corr-badge-tone-neutral {
+    color: var(--label-3);
+    background: var(--fill-1);
+}
+
+.corr-badge-tone-mild {
+    color: var(--amber);
+    background: rgba(255, 159, 10, 0.12);
+}
+
+.corr-badge-tone-strong {
+    color: var(--navy);
+    background: rgba(13, 33, 72, 0.10);
+}
+
+.corr-summary {
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--label);
+    max-width: 640px;
+}
+
+/* Suggested action: a simple tinted chip + plain text, matching the
+   chip/badge language already used for status pills elsewhere (no border
+   stripe, no boxed callout) - flatter and more modern than the old
+   left-border callout. */
+.corr-recommendation {
+    margin-top: 12px;
+    max-width: 640px;
+}
+
+.corr-recommendation-label {
+    display: inline-flex;
+    align-items: center;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: var(--navy);
+    background: rgba(13, 33, 72, 0.08);
+    padding: 3px 9px;
+    border-radius: 999px;
+    margin-bottom: 8px;
+}
+
+.corr-recommendation-text {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--label);
+}
+
+.corr-toggle-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    margin-top: 14px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--navy-3);
+    cursor: pointer;
+}
+
+.corr-toggle-btn:hover {
+    text-decoration: underline;
+}
+
+.corr-detail {
+    margin-top: 8px;
+    padding: 10px 12px;
+    background: var(--fill-1);
+    border-radius: var(--r-md);
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--label-3);
+    max-width: 640px;
+}
+
+.analytics-empty {
+    font-size: 13px;
+    color: var(--label-3);
+    padding: 20px 4px;
+}
+
+/* Smooth transitions for Run Analysis: old cards fade out before being
+   removed, the meta line fades in once the new count is known, and empty
+   / error states fade in too instead of snapping onto the page. */
+.analytics-grid-fading {
+    opacity: 0;
+    transition: opacity 0.18s var(--ease);
+}
+
+.analytics-meta-fade {
+    animation: analyticsMetaFade 0.3s var(--ease) both;
+}
+
+@keyframes analyticsMetaFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.analytics-fade-in {
+    animation: analyticsMetaFade 0.3s var(--ease) both;
 }

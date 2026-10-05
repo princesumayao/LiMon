@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -21,7 +22,7 @@
   <div class="login-container">
 
     <div class="logo-section">
-      <img src="Woodmark.svg" alt="LiMon Logo" class="logo-img">
+      <img src="Woodmark.svg" alt="Lemon Logo" class="logo-img">
       <div class="logo-sub">Library Monitoring System</div>
     </div>
 
@@ -31,6 +32,7 @@
       </div>
 
       <div class="login-form">
+
         <div class="form-group">
           <label for="User ID">Staff ID</label>
           <div class="input-wrapper">
@@ -64,11 +66,9 @@
           <a href="#" class="forgot-link">Forgot password?</a>
         </div>
 
-        <a href="/home" style="text-decoration: none">
-          <button class="btn-primary">
-            Sign In
-          </button>
-        </a>
+        <button class="btn-primary" onclick="handleLogin()">
+          Sign In
+        </button>
       </div>
     </div>
 
@@ -78,6 +78,74 @@
 
   </div>
 </div>
+
+<div class="toast" id="toast">
+  <span class="toast-icon">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+  </span>
+  <span id="toast-msg"></span>
+</div>
+
+<script>
+
+const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:4000`;
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    const toastMsg = document.getElementById('toast-msg');
+    toastMsg.textContent = msg;
+    toast.classList.add('visible');
+    setTimeout(() => toast.classList.remove('visible'), 3500);
+  }
+
+  function shakeCard() {
+    document.querySelector('.login-card').classList.add('shake');
+    setTimeout(() => document.querySelector('.login-card').classList.remove('shake'), 400);
+  }
+
+  async function handleLogin() {
+    const staffId = document.getElementById('User ID').value.trim();
+    const password = document.getElementById('password').value.trim();
+
+    if (!staffId || !password) {
+      showToast('Please fill in all fields.');
+      shakeCard();
+      return;
+    }
+
+    const btn = document.querySelector('.btn-primary');
+    btn.disabled = true;
+    btn.textContent = 'Signing in…';
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // required so the session cookie actually gets stored
+        body: JSON.stringify({ staff_id: staffId, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        showToast(data.error || 'Invalid staff ID or password.');
+        shakeCard();
+        return;
+      }
+
+      window.location.href = '/home';
+    } catch (err) {
+      console.error('Login request failed', err);
+      showToast('Could not reach the server. Is the backend running?');
+      shakeCard();
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+    }
+  }
+
+</script>
 
 </body>
 </html>

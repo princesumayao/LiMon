@@ -4,10 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Home</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="./css/style.css?v=10">
+  <script>
+    // Same reasoning as API_BASE_URL in index.js: a static
+    // src="http://localhost:4000/..." tag only ever works on the exact
+    // machine hosting the server. document.write here (blocking, so it
+    // runs before index.js parses) swaps in whatever host this page was
+    // actually loaded from, so it also works when opened over the LAN
+    // from another device's browser.
+    document.write('<script src="' + window.location.protocol + '//' + window.location.hostname + ':4000/socket.io/socket.io.js"><\/script>');
+  </script>
 </head>
 <body>
 
@@ -16,7 +26,7 @@
 
   <div class="sidebar-head">
     <div class="logo-row">
-      <img src="Woodmark.svg" alt="LiMon Logo" class="logo-full">
+      <img src="Woodmark.svg" alt="Lemon Logo" class="logo-full">
     </div>
   </div>
 
@@ -81,23 +91,64 @@
       <span class="nav-badge">6</span>
     </div>
 
+    <div class="nav-item" data-page="reports">
+      <div class="nav-icon-wrap">
+        <svg viewBox="0 0 24 24">
+          <path d="M4 19.5V5.5A1.5 1.5 0 0 1 5.5 4h8.75L20 9.75V19.5A1.5 1.5 0 0 1 18.5 21h-13A1.5 1.5 0 0 1 4 19.5z"/>
+          <path d="M14 4v6h6"/>
+          <path d="M8 13h8"/>
+          <path d="M8 16.5h8"/>
+        </svg>
+      </div>
+      Reports
+    </div>
+
+    <div class="nav-group-label" id="nav-group-insights">Insights</div>
+
+    <div class="nav-item" data-page="analytics">
+      <div class="nav-icon-wrap">
+        <svg viewBox="0 0 24 24">
+          <path d="M3 3v18h18"/>
+          <path d="M7 15l4-6 3 4 5-8"/>
+        </svg>
+      </div>
+      Analytics
+    </div>
+
   </nav>
 
   <div class="sidebar-foot">
-    <a href="/login" style="text-decoration: none">
-      <div class="user-row">
-        <div class="user-avatar">LS</div>
-        <div style="flex:1;">
-          <div class="user-name">Library Staff</div>
-          <div class="user-role">Administrator</div>
-        </div>
-        <div class="user-chevron">
-          <svg viewBox="0 0 24 24">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
+    <button type="button" id="user-menu-toggle" class="user-row">
+      <div class="user-avatar" id="user-avatar">--</div>
+      <div style="flex:1; text-align:left;">
+        <div class="user-name" id="user-name-label">Loading…</div>
+        <div class="user-role" id="user-role-label">--</div>
+      </div>
+      <div class="user-chevron">
+        <svg viewBox="0 0 24 24">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </div>
+    </button>
+
+    <div class="user-menu-popover" id="user-menu-popover">
+      <div class="user-menu-header">
+        <div class="user-avatar" id="user-menu-avatar">--</div>
+        <div>
+          <div class="user-menu-name" id="user-menu-name">--</div>
+          <div class="user-menu-role" id="user-menu-role">--</div>
         </div>
       </div>
-    </a>
+      <div class="user-menu-divider"></div>
+      <button type="button" id="logout-link" class="user-menu-item user-menu-item-danger">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        Log Out
+      </button>
+    </div>
   </div>
 
 </aside>
@@ -114,12 +165,24 @@
       <div class="topbar-sub" id="live-time">—</div>
     </div>
     <div class="topbar-actions">
-      <div class="status-chip">
-        <div class="status-dot"></div>
-        Online
-      </div>
+      <label class="notif-toggle" id="notif-toggle-wrap">
+        <span class="notif-toggle-label" id="notif-toggle-label">Desktop Alerts</span>
+        <span class="notif-toggle-switch">
+          <input type="checkbox" id="notif-toggle-input">
+          <span class="notif-toggle-track"><span class="notif-toggle-thumb"></span></span>
+        </span>
+      </label>
     </div>
   </div>
+
+  <!-- In-page toast notifications: works on every device/browser with no
+       permission prompt needed at all, unlike the OS-level "Desktop
+       Alerts" button above (which browsers block outright on plain
+       http:// LAN addresses - a security restriction, not something we
+       can code around). This is the notification method that actually
+       works for every teammate's laptop, not just the one running the
+       server. -->
+  <div class="toast-stack" id="toast-stack"></div>
 
   <!--DASHBOARD-->
   <div class="page active" id="page-dashboard">
@@ -134,10 +197,10 @@
               <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
             </svg>
           </div>
-          <span class="sc-badge b-warn">Moderate</span>
+          <span class="sc-badge b-warn" id="live-noise-badge">Moderate</span>
         </div>
         <div class="sc-label">Noise Level</div>
-        <div class="sc-value">54</div>
+        <div class="sc-value" id="live-noise">54</div>
         <div class="sc-unit">decibels · dB</div>
         <div class="sc-spark">
           <canvas id="spark-noise"></canvas>
@@ -151,10 +214,10 @@
               <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
             </svg>
           </div>
-          <span class="sc-badge b-danger">Above Limit</span>
+          <span class="sc-badge b-danger" id="live-temp-badge">Above Limit</span>
         </div>
         <div class="sc-label">Temperature</div>
-        <div class="sc-value">28.4</div>
+        <div class="sc-value" id="live-temp">28.4</div>
         <div class="sc-unit">degrees Celsius · °C</div>
         <div class="sc-spark">
           <canvas id="spark-temp"></canvas>
@@ -168,10 +231,10 @@
               <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
             </svg>
           </div>
-          <span class="sc-badge b-ok">Normal</span>
+          <span class="sc-badge b-ok" id="live-humid-badge">Normal</span>
         </div>
         <div class="sc-label">Humidity</div>
-        <div class="sc-value">62</div>
+        <div class="sc-value" id="live-humid">62</div>
         <div class="sc-unit">relative humidity · %</div>
         <div class="sc-spark">
           <canvas id="spark-humid"></canvas>
@@ -188,10 +251,10 @@
               <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
             </svg>
           </div>
-          <span class="sc-badge b-ok">Available</span>
+          <span class="sc-badge b-ok" id="live-occ-badge">Available</span>
         </div>
         <div class="sc-label">Occupancy</div>
-        <div class="sc-value">37</div>
+        <div class="sc-value" id="live-occ">37</div>
         <div class="sc-unit">of 60 max capacity</div>
         <div class="sc-spark">
           <canvas id="spark-occ"></canvas>
@@ -207,6 +270,7 @@
           <div>
             <div class="card-title">Noise &amp; Temperature Monitoring</div>
 <!--            <div class="card-sub">Today · sadsadsa</div>-->
+            <span class="chart-stale-badge sc-badge b-muted" id="trend-stale-badge">No live data</span>
           </div>
           <div class="seg-control">
             <button class="seg-btn active trend-tab" data-set="today">Today</button>
@@ -222,28 +286,29 @@
         <div class="card-header">
           <div>
             <div class="card-title">Occupancy</div>
-            <div class="card-sub">UHF RFID</div>
+            <div class="card-sub">Library ` 1</div>
           </div>
         </div>
         <div class="occ-body">
           <div class="gauge-outer">
             <canvas id="gaugeChartDash"></canvas>
             <div class="gauge-label">
-              <div class="gauge-val">37</div>
+              <div class="gauge-val" id="dash-gauge-val">37</div>
               <div class="gauge-cap">/ 60 max</div>
             </div>
           </div>
           <div class="cap-bar-wrap">
-            <div class="cap-bar-head"><span>Capacity Used</span><strong>62%</strong></div>
+            <div class="cap-bar-head"><span>Capacity Used</span><strong id="dash-capacity-pct">62%</strong></div>
             <div class="cap-track">
-              <div class="cap-fill"></div>
+              <div class="cap-fill" id="dash-cap-fill"></div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!--NOTIF PREV-->
+    <!--NOTIF PREV + SUMMARY-->
+    <div class="dashboard-split-row">
     <div class="card">
       <div class="card-header">
         <div>
@@ -252,7 +317,7 @@
         </div>
         <span class="card-action" onclick="navigate('alerts')">View All</span>
       </div>
-      <div class="alert-list">
+      <div class="alert-list" id="dashboard-recent-alerts">
         <div class="alert-row">
           <div class="alert-dot" style="background:var(--red)"></div>
           <div class="alert-text">
@@ -283,6 +348,38 @@
       </div>
     </div>
 
+    <!--SUMMARY SNAPSHOT-->
+    <div class="card summary-card summary-snapshot-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Today's Summary</div>
+          <div class="card-sub">Quick snapshot from today's sensor readings</div>
+        </div>
+        <span class="card-action" onclick="navigate('reports')">View Full Report</span>
+      </div>
+
+      <div class="summary-snapshot-grid">
+        <div class="summary-snapshot-item">
+          <span class="summary-snapshot-label">Overall</span>
+          <span class="summary-snapshot-value" id="dashboard-summary-overall">Loading...</span>
+        </div>
+        <div class="summary-snapshot-item">
+          <span class="summary-snapshot-label">Noise</span>
+          <span class="summary-snapshot-value" id="dashboard-summary-noise">--</span>
+        </div>
+        <div class="summary-snapshot-item">
+          <span class="summary-snapshot-label">Temperature</span>
+          <span class="summary-snapshot-value" id="dashboard-summary-temp">--</span>
+        </div>
+        <div class="summary-snapshot-item">
+          <span class="summary-snapshot-label">Alerts</span>
+          <span class="summary-snapshot-value" id="dashboard-summary-alerts">0</span>
+        </div>
+      </div>
+    </div>
+
+    </div>
+
   </div>
 
   <!--NOISE PAGE-->
@@ -290,12 +387,15 @@
     <div class="section-head">
       <div>
         <div class="section-title">Noise Analytics</div>
-        <!--                <div class="section-sub">Real-time decibel readings per sensor area</div>-->
         <div class="section-sub">Real-time monitoring with historical analytics</div>
+      </div>
+      <div class="header-actions">
+        <a href="http://localhost:4000/api/export/noise.csv" class="btn-text">Download CSV</a>
+        <button id="download-noise-pdf-btn" class="btn-text">Download PDF</button>
       </div>
     </div>
 
-    <div class="stat-row" style="grid-template-columns:repeat(3,1fr);">
+    <div class="stat-row" style="grid-template-columns:repeat(2,1fr);">
       <div class="stat-card">
         <div class="sc-top">
           <div class="sc-icon">
@@ -304,11 +404,9 @@
               <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
             </svg>
           </div>
-          <span class="sc-badge b-warn">
-
-          </span></div>
+          <span class="sc-badge b-warn" id="noise-a-badge">Moderate</span></div>
         <div class="sc-label">Area A</div>
-        <div class="sc-value">54</div>
+        <div class="sc-value" id="noise-a-value">54</div>
         <div class="sc-unit">decibels · dB</div>
       </div>
       <div class="stat-card">
@@ -319,22 +417,9 @@
               <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
             </svg>
           </div>
-          <span class="sc-badge b-ok">Normal</span></div>
+          <span class="sc-badge b-ok" id="noise-b-badge">Normal</span></div>
         <div class="sc-label">Area B</div>
-        <div class="sc-value">38</div>
-        <div class="sc-unit">decibels · dB</div>
-      </div>
-      <div class="stat-card">
-        <div class="sc-top">
-          <div class="sc-icon">
-            <svg viewBox="0 0 24 24">
-              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-            </svg>
-          </div>
-          <span class="sc-badge b-ok">Normal</span></div>
-        <div class="sc-label">Area C</div>
-        <div class="sc-value">42</div>
+        <div class="sc-value" id="noise-b-value">38</div>
         <div class="sc-unit">decibels · dB</div>
       </div>
     </div>
@@ -347,26 +432,18 @@
         <div class="noise-level-bar">
           <div class="nlb-label">Area A</div>
           <div class="nlb-track">
-            <div class="nlb-fill"
+            <div class="nlb-fill" id="noise-a-bar-fill"
                  style="width:54%;background:linear-gradient(90deg,var(--amber),#ffcc00);"></div>
           </div>
-          <div class="nlb-val" style="color:var(--amber)">54 dB</div>
+          <div class="nlb-val" id="noise-a-bar-val" style="color:var(--amber)">54 dB</div>
         </div>
         <div class="noise-level-bar">
           <div class="nlb-label">Area B</div>
           <div class="nlb-track">
-            <div class="nlb-fill"
+            <div class="nlb-fill" id="noise-b-bar-fill"
                  style="width:38%;background:linear-gradient(90deg,var(--green),#4ade80);"></div>
           </div>
-          <div class="nlb-val" style="color:var(--green)">38 dB</div>
-        </div>
-        <div class="noise-level-bar">
-          <div class="nlb-label">Area C</div>
-          <div class="nlb-track">
-            <div class="nlb-fill"
-                 style="width:42%;background:linear-gradient(90deg,var(--green),#4ade80);"></div>
-          </div>
-          <div class="nlb-val" style="color:var(--green)">42 dB</div>
+          <div class="nlb-val" id="noise-b-bar-val" style="color:var(--green)">38 dB</div>
         </div>
       </div>
     </div>
@@ -376,6 +453,7 @@
         <div>
           <div class="card-title">Noise Monitoring</div>
           <div class="card-sub">Today · All noise sensors</div>
+          <span class="chart-stale-badge sc-badge b-muted" id="noise-stale-badge">No live data</span>
         </div>
       </div>
       <div class="chart-wrap">
@@ -391,6 +469,10 @@
         <div class="section-title">Environment Analytics</div>
         <div class="section-sub">Real-time monitoring with historical analytics</div>
       </div>
+      <div class="header-actions">
+        <a href="http://localhost:4000/api/export/environment.csv" class="btn-text">Download CSV</a>
+        <button id="download-environment-pdf-btn" class="btn-text">Download PDF</button>
+      </div>
     </div>
 
     <div class="stat-row">
@@ -401,9 +483,9 @@
               <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
             </svg>
           </div>
-          <span class="sc-badge b-danger">Above Limit</span></div>
+          <span class="sc-badge b-danger" id="temp-a-badge">Above Limit</span></div>
         <div class="sc-label">Temp · Area A</div>
-        <div class="sc-value">28.4</div>
+        <div class="sc-value" id="temp-a-value">28.4</div>
         <div class="sc-unit">°C</div>
       </div>
       <div class="stat-card">
@@ -413,9 +495,9 @@
               <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
             </svg>
           </div>
-          <span class="sc-badge b-ok">Normal</span></div>
+          <span class="sc-badge b-ok" id="temp-b-badge">Normal</span></div>
         <div class="sc-label">Temp · Area B</div>
-        <div class="sc-value">26.1</div>
+        <div class="sc-value" id="temp-b-value">26.1</div>
         <div class="sc-unit">°C</div>
       </div>
       <div class="stat-card">
@@ -425,9 +507,9 @@
               <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
             </svg>
           </div>
-          <span class="sc-badge b-ok">Normal</span></div>
+          <span class="sc-badge b-ok" id="humid-a-badge">Normal</span></div>
         <div class="sc-label">Humidity · Area A</div>
-        <div class="sc-value">62</div>
+        <div class="sc-value" id="humid-a-value">62</div>
         <div class="sc-unit">%</div>
       </div>
       <div class="stat-card">
@@ -437,9 +519,9 @@
               <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
             </svg>
           </div>
-          <span class="sc-badge b-ok">Normal</span></div>
+          <span class="sc-badge b-ok" id="humid-b-badge">Normal</span></div>
         <div class="sc-label">Humidity · Area B</div>
-        <div class="sc-value">58</div>
+        <div class="sc-value" id="humid-b-value">58</div>
         <div class="sc-unit">%</div>
       </div>
     </div>
@@ -449,6 +531,7 @@
         <div class="card-header">
           <div class="card-title">Temperature Monitoring</div>
           <div class="card-sub">Today</div>
+          <span class="chart-stale-badge sc-badge b-muted" id="temp-stale-badge">No live data</span>
         </div>
         <div class="chart-wrap">
           <canvas id="tempChart"></canvas>
@@ -458,6 +541,7 @@
         <div class="card-header">
           <div class="card-title">Humidity Monitoring</div>
           <div class="card-sub">Today</div>
+          <span class="chart-stale-badge sc-badge b-muted" id="humid-stale-badge">No live data</span>
         </div>
         <div class="chart-wrap">
           <canvas id="humidChart"></canvas>
@@ -472,6 +556,10 @@
       <div>
         <div class="section-title">Occupancy Analytics</div>
         <div class="section-sub">Real-time monitoring with historical analytics</div>
+      </div>
+      <div class="header-actions">
+        <a href="http://localhost:4000/api/export/occupancy.csv" class="btn-text">Download CSV</a>
+        <button id="download-occupancy-pdf-btn" class="btn-text">Download PDF</button>
       </div>
     </div>
     <div class="grid-3-1">
@@ -495,25 +583,41 @@
           <div class="gauge-outer">
             <canvas id="gaugeChartOcc"></canvas>
             <div class="gauge-label">
-              <div class="gauge-val">37</div>
+              <div class="gauge-val" id="occ-gauge-val">37</div>
               <div class="gauge-cap">/ 60 max</div>
             </div>
           </div>
           <div class="cap-bar-wrap">
-            <div class="cap-bar-head"><span>Capacity Used</span><strong>62%</strong></div>
+            <div class="cap-bar-head"><span>Capacity Used</span><strong id="occ-capacity-pct">62%</strong></div>
             <div class="cap-track">
-              <div class="cap-fill"></div>
+              <div class="cap-fill" id="occ-cap-fill"></div>
             </div>
           </div>
           <div style="width:100%;display:flex;flex-direction:column;gap:6px;">
             <div style="display:flex;justify-content:space-between;font-size:12px;padding:0 2px;">
-              <span style="color:var(--label-3)">Entered today</span><strong>49</strong>
+              <span style="color:var(--label-3)">Entered today</span><strong id="occ-entered">49</strong>
             </div>
             <div style="display:flex;justify-content:space-between;font-size:12px;padding:0 2px;">
-              <span style="color:var(--label-3)">Exited today</span><strong>12</strong>
+              <span style="color:var(--label-3)">Exited today</span><strong id="occ-exited">12</strong>
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="card table-map-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Table Occupancy Map</div>
+          <div class="card-sub">Live layout view · updates automatically</div>
+        </div>
+        <div class="table-map-legend">
+          <span class="tm-legend-item"><span class="tm-dot tm-dot-available"></span>Available</span>
+          <span class="tm-legend-item"><span class="tm-dot tm-dot-occupied"></span>Full</span>
+        </div>
+      </div>
+      <div class="table-map-body" id="table-map-body">
+        <div class="table-map-empty" id="table-map-empty">Loading table layout…</div>
       </div>
     </div>
   </div>
@@ -523,59 +627,191 @@
     <div class="section-head">
       <div>
         <div class="section-title">System Notifications</div>
-        <div class="section-sub">All threshold notifications · Today</div>
+        <div class="section-sub">All threshold notifications</div>
+      </div>
+      <div class="header-actions">
+        <a href="http://localhost:4000/api/export/notifications.csv" class="btn-text">Download CSV</a>
+        <button id="download-notifications-pdf-btn" class="btn-text">Download PDF</button>
       </div>
     </div>
     <div class="card">
-      <div class="alert-list">
+      <div class="alert-list alert-list-scroll" id="notifications-alert-list"></div>
+      <div class="pagination-bar" id="notifications-pagination">
+        <button class="pg-btn" id="notif-prev-btn" onclick="changeNotificationsPage(-1)">Previous</button>
+        <span class="pg-status" id="notif-page-status">Page 1 of 1</span>
+        <button class="pg-btn" id="notif-next-btn" onclick="changeNotificationsPage(1)">Next</button>
+      </div>
+    </div>
+  </div>
 
-        <div class="alert-row">
-          <div class="alert-dot" style="background:var(--red)"></div>
-          <div class="alert-text">
-            <div class="alert-msg">Temperature above limit: 28°C</div>
-            <div class="alert-meta">Today, 2:14 PM · Area A Sensor</div>
-          </div>
-          <span class="alert-tag">TEMP</span></div>
+  <!--REPORTS PAGE-->
+  <div class="page report-page" id="page-reports">
+    <div class="section-head">
+      <div>
+        <div class="section-title">Daily Reports</div>
+        <div class="section-sub">Detailed summary view separated from the live dashboard</div>
+      </div>
+    </div>
 
-        <div class="alert-row">
-          <div class="alert-dot" style="background:var(--amber)"></div>
-          <div class="alert-text">
-            <div class="alert-msg">Moderate Noise: 54 dB</div>
-            <div class="alert-meta">Today, 1:47 PM · Area B Sensor</div>
-          </div>
-          <span class="alert-tag">NOISE</span></div>
+    <div class="card request-report-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Request a Report</div>
+          <div class="card-sub">Pick any date and area.</div>
+        </div>
+      </div>
+      <div class="request-report-body">
+        <div class="request-report-field">
+          <label for="report-date-input" class="settings-label">Date</label>
+          <input type="date" id="report-date-input" class="settings-select">
+        </div>
+        <div class="request-report-field">
+          <label for="report-area-select" class="settings-label">Area</label>
+          <select id="report-area-select" class="settings-select">
+            <option value="Area A">Area A</option>
+            <option value="Area B">Area B</option>
+            <option value="Entrance">Entrance</option>
+          </select>
+        </div>
+        <div class="request-report-actions">
+          <a id="report-download-csv-btn" class="btn-text">Download CSV</a>
+          <button type="button" id="report-download-pdf-btn" class="btn-primary">Download PDF</button>
+        </div>
+      </div>
+      <div class="request-report-status" id="report-status-line"></div>
+    </div>
 
-        <div class="alert-row">
-          <div class="alert-dot" style="background:var(--navy-3)"></div>
-          <div class="alert-text">
-            <div class="alert-msg">Occupancy at 60% capacity</div>
-            <div class="alert-meta">Today, 1:05 PM · Entrance RFID</div>
+    <div class="report-intro">
+      <div class="report-intro-copy">
+        <div class="report-kicker">Daily snapshot</div>
+        <div class="report-intro-title">Today's Summary Report</div>
+        <div class="report-intro-sub">Computed from sensor readings and arranged for quick review.</div>
+        <div class="report-area-picker">
+          <span class="settings-label">Showing</span>
+          <div class="seg-control" id="report-summary-area-tabs" role="group" aria-label="Report area">
+            <button type="button" class="seg-btn active" data-area="all">All</button>
+            <button type="button" class="seg-btn" data-area="Area A">Area A</button>
+            <button type="button" class="seg-btn" data-area="Area B">Area B</button>
           </div>
-          <span class="alert-tag">OCC</span></div>
+        </div>
+        <div class="header-actions report-intro-action">
+          <button type="button" id="download-pdf-report-btn" class="btn-text">Download Full PDF</button>
+        </div>
+      </div>
+      <div class="report-summary-band">
+        <div class="summary-plain" id="summary-overall-line">Loading today's summary…</div>
+        <div class="summary-plain-list">
+          <div class="summary-plain-item">
+            <span class="summary-plain-dot" style="background:var(--navy-3)"></span>
+            <span id="summary-noise-line">--</span>
+          </div>
+          <div class="summary-plain-item">
+            <span class="summary-plain-dot" style="background:var(--navy-3)"></span>
+            <span id="summary-temp-line">--</span>
+          </div>
+          <div class="summary-plain-item">
+            <span class="summary-plain-dot" style="background:var(--navy-3)"></span>
+            <span id="summary-humid-line">--</span>
+          </div>
+          <div class="summary-plain-item">
+            <span class="summary-plain-dot" style="background:var(--navy-3)"></span>
+            <span id="summary-occ-line">--</span>
+          </div>
+        </div>
+      </div>
+    </div>
 
-        <div class="alert-row">
-          <div class="alert-dot" style="background:var(--red)"></div>
-          <div class="alert-text">
-            <div class="alert-msg">Noise level above limit: 63 dB</div>
-            <div class="alert-meta">Today, 11:22 AM · Area A Sensor</div>
-          </div>
-          <span class="alert-tag">NOISE</span></div>
+    <div class="card settings-card" id="sensor-log-settings-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Sensor Log Frequency</div>
+          <div class="card-sub">How often noise &amp; environment readings are saved to the database.</div>
+        </div>
+      </div>
+      <div class="settings-card-body">
+        <label for="sensor-log-interval-select" class="settings-label">Save a reading:</label>
+        <select id="sensor-log-interval-select" class="settings-select">
+          <option value="0">Every reading (no throttling)</option>
+          <option value="5000">Every 5 seconds</option>
+          <option value="10000">Every 10 seconds</option>
+          <option value="30000">Every 30 seconds</option>
+          <option value="60000">Every 1 minute</option>
+          <option value="300000">Every 5 minutes</option>
+        </select>
+        <span id="settings-save-status" class="settings-save-status"></span>
+      </div>
+    </div>
 
-        <div class="alert-row">
-          <div class="alert-dot" style="background:var(--green)"></div>
-          <div class="alert-text">
-            <div class="alert-msg">Humidity returned to normal</div>
-            <div class="alert-meta">Today, 9:30 AM · Area C Sensor</div>
-          </div>
-          <span class="alert-tag">HUMID</span></div>
+    <div class="stat-row report-stat-row">
+      <div class="stat-card">
+        <div class="sc-label" id="summary-noise-label">Noise</div>
+        <div class="sc-value" id="summary-noise-avg">--</div>
+        <div class="sc-unit">avg dB today</div>
+        <div class="summary-stat-meta">Min <strong id="summary-noise-min">--</strong> · Max <strong id="summary-noise-max">--</strong> · <span id="summary-noise-count">0</span> readings</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label" id="summary-temp-label">Temperature</div>
+        <div class="sc-value" id="summary-temp-avg">--</div>
+        <div class="sc-unit">avg °C today</div>
+        <div class="summary-stat-meta">Min <strong id="summary-temp-min">--</strong> · Max <strong id="summary-temp-max">--</strong></div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label" id="summary-humid-label">Humidity</div>
+        <div class="sc-value" id="summary-humid-avg">--</div>
+        <div class="sc-unit">avg % today</div>
+        <div class="summary-stat-meta">Min <strong id="summary-humid-min">--</strong> · Max <strong id="summary-humid-max">--</strong></div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Occupancy (Entrance)</div>
+        <div class="sc-value" id="summary-occ-current">--</div>
+        <div class="sc-unit"><span id="summary-occ-percent">--</span>% of capacity</div>
+        <div class="summary-stat-meta">In <strong id="summary-occ-entered">0</strong> · Out <strong id="summary-occ-exited">0</strong></div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Alerts Today</div>
+        <div class="sc-value" id="summary-alerts-total">0</div>
+        <div class="sc-unit">total notifications</div>
+        <div class="summary-stat-meta">Moderate <strong id="summary-alerts-moderate">0</strong> · Above limit <strong id="summary-alerts-above">0</strong></div>
+      </div>
+    </div>
+  </div>
 
-        <div class="alert-row">
-          <div class="alert-dot" style="background:var(--amber)"></div>
-          <div class="alert-text">
-            <div class="alert-msg">Noise reached moderate level: 51 dB</div>
-            <div class="alert-meta">Today, 8:45 AM · Area B Sensor</div>
-          </div>
-          <span class="alert-tag">NOISE</span></div>
+  <!--ANALYTICS PAGE-->
+  <div class="page" id="page-analytics">
+    <div class="section-head">
+      <div>
+        <div class="section-title">Analytics</div>
+        <div class="section-sub">Patterns in your sensor data, and what to do about them</div>
+      </div>
+    </div>
+
+    <div class="card analytics-controls-card">
+      <div class="analytics-controls">
+        <div class="analytics-field">
+          <label for="corr-area-select">Area</label>
+          <select id="corr-area-select" class="settings-select">
+            <option value="Area A">Area A</option>
+            <option value="Area B">Area B</option>
+          </select>
+        </div>
+        <div class="analytics-field">
+          <label for="corr-start-date">From</label>
+          <input type="date" id="corr-start-date" class="settings-select">
+        </div>
+        <div class="analytics-field">
+          <label for="corr-end-date">To</label>
+          <input type="date" id="corr-end-date" class="settings-select">
+        </div>
+        <button id="corr-run-btn" class="btn-primary">Run Analysis</button>
+      </div>
+      <div class="analytics-meta" id="corr-meta-line"></div>
+    </div>
+
+    <div class="analytics-section-label">Patterns We Found</div>
+    <div class="card corr-tabs-card">
+      <div class="seg-control corr-tabbar" id="corr-tabbar"></div>
+      <div class="corr-panel" id="corr-panel">
+        <div class="corr-idle">Pick a date range and area above, then tap <strong>Run Analysis</strong> to see patterns.</div>
       </div>
     </div>
   </div>
@@ -585,6 +821,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
-<script src="./javascript/index.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="./javascript/index.js?v=19"></script>
 </body>
 </html>
